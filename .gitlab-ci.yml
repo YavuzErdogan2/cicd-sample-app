@@ -1,29 +1,28 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
 stages:
   - build
-  - test
   - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
 
 build:
   stage: build
   script:
-    - echo "Building the application..."
-    - bash ./sample-app.sh
-  tags:
-    - shell
-
-test:
-  stage: test
-  script:
-    - echo "Testing the application..."
-    - curl http://localhost:5050/ | grep "You are calling me from"
-  tags:
-    - shell
+    - echo "Building Docker image..."
+    - docker build -t sampleapp .
+  artifacts:
+    paths:
+      - tempdir
 
 deploy:
   stage: deploy
   script:
-    - echo "Deploying the application..."
-    - docker run --name samplerunning -d -p 5050:5050 your-docker-image
-  tags:
-    - shell
-
+    - echo "Deploying Docker container..."
+    - docker run -d -p 5050:5050 --name samplerunning sampleapp
+  only:
+    - main
